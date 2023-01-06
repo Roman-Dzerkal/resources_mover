@@ -74,8 +74,6 @@ class MoverViewModel extends BaseViewModel {
         throw '${platformLogFile.path} is empty!';
       }
 
-
-
       List<String> list = _getTexturesFromLog(platformLogFile.path!);
       BotToast.showText(text: 'Extracted ${list.length} textures');
       logFilePath = platformLogFile.path!;
@@ -85,8 +83,6 @@ class MoverViewModel extends BaseViewModel {
       }
       textures.addAll(list);
       list.clear();
-
-
     }
   }
 
@@ -135,6 +131,5 @@ class MoverViewModel extends BaseViewModel {
   }
 
   void _checkOther(String relativePath, String sourcePath, String targetPath) {
-    var dirname = windowsContext.dirname(relativePath);
   }
 }

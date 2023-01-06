@@ -3,6 +3,7 @@
 import 'dart:io';
 
 import 'package:bot_toast/bot_toast.dart';
+import 'package:f_logs/f_logs.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +18,7 @@ class MoverViewModel extends BaseViewModel {
 
   bool startButtonActive = true;
 
-  final List<String> extensions = [
+  final List<String> _extensions = [
     '.dds',
     '.thm',
     '_bump#.dds',
@@ -25,19 +26,29 @@ class MoverViewModel extends BaseViewModel {
     '_bump.thm'
   ];
 
-  final p.Context windowsContext = p.Context(style: p.Style.windows);
+  final p.Context _context = p.Context(style: p.Style.windows);
 
   TextEditingController logFilePathController = TextEditingController();
   TextEditingController targetPathController = TextEditingController();
   TextEditingController sourcePathController = TextEditingController();
 
-  List<String> textures = [];
+  List<String> _textures = [];
+
+  File? _notFound;
+
+  void onReady() async {
+    Directory appDocument = await getApplicationDocumentsDirectory();
+    _notFound = File(_context.join(appDocument.path, 'NOT_FOUND.txt'));
+    if (_notFound!.existsSync()) {
+      _notFound!.deleteSync();
+    }
+  }
 
   void openSourceFolder() async {
     String? selectedFolder = await FilePicker.platform.getDirectoryPath();
 
     if (selectedFolder != null) {
-      String folderName = windowsContext.basename(selectedFolder);
+      String folderName = _context.basename(selectedFolder);
       if ('textures' != folderName) {
         BotToast.showText(text: 'Selected folder must be \'textures\'');
       } else {
@@ -50,7 +61,7 @@ class MoverViewModel extends BaseViewModel {
   void openTargetFolder() async {
     String? selectedFolder = await FilePicker.platform.getDirectoryPath();
     if (selectedFolder != null) {
-      if ('textures' != windowsContext.basename(selectedFolder)) {
+      if ('textures' != _context.basename(selectedFolder)) {
         BotToast.showText(text: 'Selected folder must be \'textures\'');
       } else if (sourceFolderPath == selectedFolder) {
         BotToast.showText(
@@ -76,19 +87,22 @@ class MoverViewModel extends BaseViewModel {
 
       List<String> list = _getTexturesFromLog(platformLogFile.path!);
       BotToast.showText(text: 'Extracted ${list.length} textures');
+      list.forEach((element) {
+        print(element);
+      });
       logFilePath = platformLogFile.path!;
       logFilePathController.text = platformLogFile.path!;
-      if (textures.isNotEmpty) {
-        textures.clear();
+      if (_textures.isNotEmpty) {
+        _textures.clear();
       }
-      textures.addAll(list);
+      _textures.addAll(list);
       list.clear();
     }
   }
 
   void startCopy() {
     print('start');
-    _checkExistence(textures, sourceFolderPath!);
+    _checkExistence(_textures, sourceFolderPath!);
   }
 
   List<String> _getTexturesFromLog(String logFilePath) {
@@ -108,28 +122,45 @@ class MoverViewModel extends BaseViewModel {
         .toList();
   }
 
-  List<String> _collectAllFiles(
-      List<String> textures, String sourceFolderPath) {
-    return List.empty();
-  }
-
   void _checkExistence(List<String> textures, String sourceFolder) async {
-    Directory documentFolder = await getApplicationDocumentsDirectory();
-    File notFoundFile =
-        File(windowsContext.join(documentFolder.path, 'NOT_FOUND.txt'));
-
     for (String texture in textures) {
-      File textureFile =
-          File(windowsContext.join(sourceFolder, texture) + '.dds');
+      File textureFile = File(_context.join(sourceFolder, texture) + '.dds');
       bool exist = await textureFile.exists();
-      if (!exist) {
-        notFoundFile.writeAsStringSync(texture + '\n', mode: FileMode.append);
+      if (exist) {
+        _checkOthers(texture, sourceFolder, targetFolderPath!);
       } else {
-        _checkOther(texture, sourceFolder, targetFolderPath!);
+        _notFound!.writeAsStringSync(texture + '\n', mode: FileMode.append);
       }
     }
   }
 
-  void _checkOther(String relativePath, String sourcePath, String targetPath) {
+  /// This method finds and copies the other files with required extensions
+  ///
+  /// relativePath -> materials\wood\fanera_01
+  /// sourcePath -> path_to_sdk\gamedata\textures\
+  /// targetPath -> path_to_game\gamedata\textures\
+  void _checkOthers(String relativePath, String sourcePath, String targetPath) {
+    for (var extension in _extensions) {
+      // f = path_to_sdk\gamedata\textures\materials\wood\fanera_01.dds
+      File f = File(_context.join(sourcePath, relativePath) + extension);
+      bool exists = f.existsSync();
+
+      if (!exists) continue;
+
+      String textureDirPath = relativePath.contains('\\')
+          ? _context.dirname(relativePath)
+          : relativePath; // materials\wood
+      String textureName = _context.basename(relativePath);
+
+      // path_to_game\gamedata\textures\materials\wood\
+      var fullDirPath = _context.join(targetPath, textureDirPath);
+      Directory d = Directory(fullDirPath);
+
+      if (!d.existsSync()) {
+        d.createSync(recursive: true);
+      }
+      var newFullPath = _context.join(d.path, textureName) + extension;
+      f.copySync(newFullPath);
+    }
   }
 }

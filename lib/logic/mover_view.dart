@@ -9,6 +9,7 @@ class MoverView extends StatelessWidget {
   Widget build(BuildContext context) {
     return ViewModelBuilder<MoverViewModel>.reactive(
       viewModelBuilder: () => MoverViewModel(),
+      onModelReady: (model) => model.onReady,
       builder: (context, model, child) => Scaffold(
         body: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,

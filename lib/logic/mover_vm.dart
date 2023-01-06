@@ -3,7 +3,6 @@
 import 'dart:io';
 
 import 'package:bot_toast/bot_toast.dart';
-import 'package:f_logs/f_logs.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -34,14 +33,18 @@ class MoverViewModel extends BaseViewModel {
 
   List<String> _textures = [];
 
-  File? _notFound;
+  late File _notFound;
+
+  String currentTexture = '';
+  int amountTextures = 0;
 
   void onReady() async {
     Directory appDocument = await getApplicationDocumentsDirectory();
     _notFound = File(_context.join(appDocument.path, 'NOT_FOUND.txt'));
-    if (_notFound!.existsSync()) {
-      _notFound!.deleteSync();
+    if (_notFound.existsSync()) {
+      _notFound.writeAsStringSync('');
     }
+    print(_notFound);
   }
 
   void openSourceFolder() async {
@@ -101,7 +104,6 @@ class MoverViewModel extends BaseViewModel {
   }
 
   void startCopy() {
-    print('start');
     _checkExistence(_textures, sourceFolderPath!);
   }
 
@@ -129,7 +131,7 @@ class MoverViewModel extends BaseViewModel {
       if (exist) {
         _checkOthers(texture, sourceFolder, targetFolderPath!);
       } else {
-        _notFound!.writeAsStringSync(texture + '\n', mode: FileMode.append);
+        _notFound.writeAsStringSync(texture + '\n', mode: FileMode.append);
       }
     }
   }

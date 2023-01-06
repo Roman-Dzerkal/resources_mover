@@ -2,8 +2,11 @@
 
 import 'dart:io';
 
+import 'package:bot_toast/bot_toast.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:stacked/stacked.dart';
 import 'package:path/path.dart' as p;
 
@@ -12,23 +15,51 @@ class MoverViewModel extends BaseViewModel {
   String? targetFolderPath;
   String? logFilePath;
 
-  double progressValue = 0.67;
+  bool startButtonActive = true;
 
-  String currentFile = '';
+  final List<String> extensions = [
+    '.dds',
+    '.thm',
+    '_bump#.dds',
+    '_bump.dds',
+    '_bump.thm'
+  ];
+
+  final p.Context windowsContext = p.Context(style: p.Style.windows);
+
+  TextEditingController logFilePathController = TextEditingController();
+  TextEditingController targetPathController = TextEditingController();
+  TextEditingController sourcePathController = TextEditingController();
+
+  List<String> textures = [];
 
   void openSourceFolder() async {
-    var selectedFolder = await FilePicker.platform.getDirectoryPath();
+    String? selectedFolder = await FilePicker.platform.getDirectoryPath();
+
     if (selectedFolder != null) {
-      sourceFolderPath = selectedFolder;
-      print(sourceFolderPath);
+      String folderName = windowsContext.basename(selectedFolder);
+      if ('textures' != folderName) {
+        BotToast.showText(text: 'Selected folder must be \'textures\'');
+      } else {
+        sourceFolderPath = selectedFolder;
+        sourcePathController.text = selectedFolder;
+      }
     }
   }
 
   void openTargetFolder() async {
-    var selectedFolder = await FilePicker.platform.getDirectoryPath();
+    String? selectedFolder = await FilePicker.platform.getDirectoryPath();
     if (selectedFolder != null) {
-      targetFolderPath = selectedFolder;
-      print(targetFolderPath);
+      if ('textures' != windowsContext.basename(selectedFolder)) {
+        BotToast.showText(text: 'Selected folder must be \'textures\'');
+      } else if (sourceFolderPath == selectedFolder) {
+        BotToast.showText(
+            text:
+                'Source and Target folders cannot be the same! Please choose other folder.');
+      } else {
+        targetFolderPath = selectedFolder;
+        targetPathController.text = selectedFolder;
+      }
     }
   }
 
@@ -36,49 +67,74 @@ class MoverViewModel extends BaseViewModel {
     FilePickerResult? result = await FilePicker.platform
         .pickFiles(type: FileType.custom, allowedExtensions: ['log']);
     if (result != null) {
-      logFilePath = result.files.first.path;
-      print(logFilePath);
+      PlatformFile platformLogFile = result.files.first;
+
+      if (platformLogFile.size == 0) {
+        BotToast.showText(text: 'Selected file is empty!');
+        throw '${platformLogFile.path} is empty!';
+      }
+
+
+
+      List<String> list = _getTexturesFromLog(platformLogFile.path!);
+      BotToast.showText(text: 'Extracted ${list.length} textures');
+      logFilePath = platformLogFile.path!;
+      logFilePathController.text = platformLogFile.path!;
+      if (textures.isNotEmpty) {
+        textures.clear();
+      }
+      textures.addAll(list);
+      list.clear();
+
+
     }
   }
 
-  void startCopy() async {
-    List<String> textures = parseLog();
-    if (sourceFolderPath == targetFolderPath) {
-      throw 'Source and target folders cannot be the same';
-    }
-
-    copyDirectories(textures, targetFolderPath!, sourceFolderPath!);
-
-    currentFile = textures.first;
-    notifyListeners();
+  void startCopy() {
+    print('start');
+    _checkExistence(textures, sourceFolderPath!);
   }
 
-  List<String> parseLog() {
-    File logFile = File(logFilePath!);
+  List<String> _getTexturesFromLog(String logFilePath) {
+    File logFile = File(logFilePath);
+
     List<String> list = logFile.readAsLinesSync();
     list.removeWhere((line) => !line.contains('Can\'t find texture'));
-    list = list
+
+    if (list.isEmpty) {
+      BotToast.showText(text: 'There are no one texture in log file');
+      throw 'Log file hasn\'t necessary information';
+    }
+
+    return list
         .map((line) =>
             line.substring(line.indexOf(' \'') + 2, line.lastIndexOf('\'')))
         .toList();
-
-    return list;
   }
 
-  void copyDirectories(List<String> textures, String targetFolderPath,
-      String sourceFolder) async {
-    var context = p.Context(style: p.Style.windows);
-    textures.forEach((element12) {
-      if (element12.contains('\\')) {
-        // var s = context.dirname(element);
-        // var t = targetFolderPath + '\\' + s;
-        Directory dir =
-            Directory(targetFolderPath + '\\' + context.dirname(element12));
-        List<FileSystemEntity> l = dir.listSync();
-        l.removeWhere(
-            (element) => !element.path.contains(context.basename(element12)));
-        print(l);
+  List<String> _collectAllFiles(
+      List<String> textures, String sourceFolderPath) {
+    return List.empty();
+  }
+
+  void _checkExistence(List<String> textures, String sourceFolder) async {
+    Directory documentFolder = await getApplicationDocumentsDirectory();
+    File notFoundFile =
+        File(windowsContext.join(documentFolder.path, 'NOT_FOUND.txt'));
+
+    for (String texture in textures) {
+      File textureFile =
+          File(windowsContext.join(sourceFolder, texture) + '.dds');
+      bool exist = await textureFile.exists();
+      if (!exist) {
+        notFoundFile.writeAsStringSync(texture + '\n', mode: FileMode.append);
+      } else {
+        _checkOther(texture, sourceFolder, targetFolderPath!);
       }
-    });
+    }
+  }
+
+  void _checkOther(String relativePath, String sourcePath, String targetPath) {
+    var dirname = windowsContext.dirname(relativePath);
   }
 }

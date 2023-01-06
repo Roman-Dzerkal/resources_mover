@@ -15,7 +15,7 @@ class MoverViewModel extends BaseViewModel {
   String? targetFolderPath;
   String? logFilePath;
 
-  bool startButtonActive = true;
+  bool startButtonActive = false;
 
   final List<String> _extensions = [
     '.dds',
@@ -37,6 +37,10 @@ class MoverViewModel extends BaseViewModel {
 
   String currentTexture = '';
   int amountTextures = 0;
+  double value = 0.0;
+  int i = 0;
+
+  String message = '';
 
   void onReady() async {
     Directory appDocument = await getApplicationDocumentsDirectory();
@@ -90,9 +94,7 @@ class MoverViewModel extends BaseViewModel {
 
       List<String> list = _getTexturesFromLog(platformLogFile.path!);
       BotToast.showText(text: 'Extracted ${list.length} textures');
-      list.forEach((element) {
-        print(element);
-      });
+      amountTextures = list.length;
       logFilePath = platformLogFile.path!;
       logFilePathController.text = platformLogFile.path!;
       if (_textures.isNotEmpty) {
@@ -101,9 +103,12 @@ class MoverViewModel extends BaseViewModel {
       _textures.addAll(list);
       list.clear();
     }
+    startButtonActive = true;
+    notifyListeners();
   }
 
-  void startCopy() {
+  void startCopy(BuildContext context) async {
+    message = 'Copying $amountTextures textures...';
     _checkExistence(_textures, sourceFolderPath!);
   }
 
@@ -126,6 +131,13 @@ class MoverViewModel extends BaseViewModel {
 
   void _checkExistence(List<String> textures, String sourceFolder) async {
     for (String texture in textures) {
+      value = (i / textures.length);
+      i = i + 1;
+      currentTexture = texture;
+      notifyListeners();
+      /* Future.delayed(Duration(milliseconds: 1000))
+          .then((value) => notifyListeners()); */
+
       File textureFile = File(_context.join(sourceFolder, texture) + '.dds');
       bool exist = await textureFile.exists();
       if (exist) {
@@ -134,6 +146,11 @@ class MoverViewModel extends BaseViewModel {
         _notFound.writeAsStringSync(texture + '\n', mode: FileMode.append);
       }
     }
+    BotToast.showText(
+        text: 'All textures was copied success!',
+        duration: Duration(seconds: 5));
+    message = 'Copied!';
+    notifyListeners();
   }
 
   /// This method finds and copies the other files with required extensions

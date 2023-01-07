@@ -46,7 +46,7 @@ class MoverViewModel extends BaseViewModel {
     Directory appDocument = await getApplicationDocumentsDirectory();
     _notFound = File(_context.join(appDocument.path, 'NOT_FOUND.txt'));
     if (_notFound.existsSync()) {
-      _notFound.writeAsStringSync('');
+      _notFound.deleteSync();
     }
     print(_notFound);
   }

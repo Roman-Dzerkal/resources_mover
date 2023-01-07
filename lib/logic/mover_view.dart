@@ -81,15 +81,23 @@ class MoverView extends StatelessWidget {
                     ),
                   ),
                   ElevatedButton(
-                      onPressed: model.openLogFile,
-                      child: const Text('Open')),
+                      onPressed: model.openLogFile, child: const Text('Open')),
                 ],
               ),
             ],
           ),
-          ElevatedButton(
-              onPressed: model.startButtonActive ? () => model.startCopy(context) : null,
-              child: const Text('Start copy')),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton(
+                  onPressed: model.startButtonActive
+                      ? () => model.startCopy(context)
+                      : null,
+                  child: const Text('Start copy')),
+              ElevatedButton(
+                  onPressed: model.openLog, child: Text('Open NOT_FOUND file'))
+            ],
+          ),
           Text(model.message),
           Text('Current: ${model.currentTexture}'),
           LinearProgressIndicator(

@@ -193,7 +193,7 @@ class MoverViewModel extends BaseViewModel {
     Directory appDocument = await getApplicationDocumentsDirectory();
     File log = File(_context.join(appDocument.path, 'NOT_FOUND.txt'));
     if (log.existsSync()) {
-      log.openSync();
+      Process.runSync('notepad.exe', [log.path]);
     } else {
       BotToast.showText(text: 'The file doesn\'t exist!');
     }

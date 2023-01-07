@@ -119,7 +119,7 @@ class MoverViewModel extends BaseViewModel {
       list = logFile.readAsLinesSync();
     } catch (e) {
       if (e is FileSystemException) {
-        BotToast.showText(text: e.message);
+        BotToast.showText(text: 'change log encoding to UTF-8');
       }
     }
     list.removeWhere((line) => !line.contains('Can\'t find texture'));

@@ -41,6 +41,7 @@ dependencies:
   stacked: ^3.0.1
   path: ^1.8.2
   bot_toast: ^4.0.3
+  f_logs: ^2.0.1
 
 dev_dependencies:
   flutter_test:

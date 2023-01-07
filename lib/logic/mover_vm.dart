@@ -114,8 +114,14 @@ class MoverViewModel extends BaseViewModel {
 
   List<String> _getTexturesFromLog(String logFilePath) {
     File logFile = File(logFilePath);
-
-    List<String> list = logFile.readAsLinesSync();
+    List<String> list = List.empty();
+    try {
+      list = logFile.readAsLinesSync();
+    } catch (e) {
+      if (e is FileSystemException) {
+        BotToast.showText(text: e.message);
+      }
+    }
     list.removeWhere((line) => !line.contains('Can\'t find texture'));
 
     if (list.isEmpty) {
@@ -180,6 +186,16 @@ class MoverViewModel extends BaseViewModel {
       }
       var newFullPath = _context.join(d.path, textureName) + extension;
       f.copySync(newFullPath);
+    }
+  }
+
+  void openLog() async {
+    Directory appDocument = await getApplicationDocumentsDirectory();
+    File log = File(_context.join(appDocument.path, 'NOT_FOUND.txt'));
+    if (log.existsSync()) {
+      log.openSync();
+    } else {
+      BotToast.showText(text: 'The file doesn\'t exist!');
     }
   }
 }

@@ -1,19 +1,18 @@
 {
-  "actorSpecification": 1,
-  "name": "name-of-my-scraper",
-  "version": "0.0",
-  "buildTag": "latest",
-  "title":"test",
-  "type": "object",
-  "properties": {
-  "schemaVersion": {
-      "type": "string",
-      "enum": ["1.0"]
+    "title": "CheerioCrawler Template",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+        "startUrls": {
+            "title": "Start URLs",
+            "type": "array",
+            "description": "URLs to start with.",
+            "editor": "requestListSources",
+            "prefill": [
+                {
+                    "url": "https://apify.com"
+                }
+            ]
+        }
     }
-},
-  "required": ["title"],
-  "environmentVariables": {
-      "MYSQL_USER": "my_username",
-      "MYSQL_PASSWORD": "@mySecretPassword"
-  }
 }

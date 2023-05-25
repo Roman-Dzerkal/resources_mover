@@ -9,7 +9,7 @@
   "schemaVersion": {
       "type": "string",
       "enum": ["1.0"]
-    },
+    }
 },
   "required": ["title"],
   "environmentVariables": {

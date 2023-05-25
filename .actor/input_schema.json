@@ -6,11 +6,5 @@
   "environmentVariables": {
       "MYSQL_USER": "my_username",
       "MYSQL_PASSWORD": "@mySecretPassword"
-  },
-  "dockerfile": "./Dockerfile",
-  "readme": "./ACTOR.md",
-  "input": "./input_schema.json",
-  "storages": {
-    "dataset": "./dataset_schema.json"
   }
 }

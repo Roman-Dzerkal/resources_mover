@@ -1,5 +1,5 @@
 {
-  "actorSpecification": 1, // always 1
+  "actorSpecification": 1,
   "name": "name-of-my-scraper",
   "version": "0.0",
   "buildTag": "latest",

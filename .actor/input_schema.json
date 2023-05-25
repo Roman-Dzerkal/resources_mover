@@ -5,7 +5,12 @@
   "buildTag": "latest",
   "title":"test",
   "type": "object",
-  "properties": {},
+  "properties": {
+  "schemaVersion": {
+      "type": "string",
+      "enum": ["1.0"]
+    },
+},
   "required": ["title"],
   "environmentVariables": {
       "MYSQL_USER": "my_username",

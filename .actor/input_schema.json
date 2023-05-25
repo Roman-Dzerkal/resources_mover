@@ -3,6 +3,7 @@
   "name": "name-of-my-scraper",
   "version": "0.0",
   "buildTag": "latest",
+  "title":"test",
   "environmentVariables": {
       "MYSQL_USER": "my_username",
       "MYSQL_PASSWORD": "@mySecretPassword"

@@ -5,6 +5,8 @@
   "buildTag": "latest",
   "title":"test",
   "type": "object",
+  "properties": {},
+  "required": ["title"],
   "environmentVariables": {
       "MYSQL_USER": "my_username",
       "MYSQL_PASSWORD": "@mySecretPassword"
